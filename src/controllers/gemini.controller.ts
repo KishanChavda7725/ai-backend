@@ -16,7 +16,17 @@ export const geminiSearchHandler = async (req: Request, res: Response) => {
     const prompt = req.body.prompt as string;
     let chatId = req?.body?.chatId || ("" as string);
     const file = req.file;
+    let conversation: { role: string; parts: { text: string }[] }[] = [];
     const image = file ? file.filename : undefined;
+    if (chatId) {
+      const history = await Search.find({ chatId: chatId }).sort({
+        createdAt: 1,
+      });
+      conversation = history.flatMap((item) => [
+        { role: "user", parts: [{ text: item.prompt }] },
+        { role: "model", parts: [{ text: item.result }] },
+      ]);
+    }
 
     if (!prompt && !image) {
       return res
@@ -124,9 +134,10 @@ export const geminiSearchHandler = async (req: Request, res: Response) => {
       } else {
         // Prompt only
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        conversation.push({ role: "user", parts: [{ text: prompt }] });
         result = await model.generateContent({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7 },
+          contents: conversation,
+          generationConfig: { temperature: 1 },
           safetySettings: [
             {
               category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
@@ -154,9 +165,6 @@ export const geminiSearchHandler = async (req: Request, res: Response) => {
       images: image ? [`/uploads/${image}`] : [],
       resImages: [],
     });
-    // const searchRecord = await Search.find({ chatId })
-    //   .sort({ createdAt: -1 })
-    //   .exec();
     res.status(201).json({
       status: "success",
       message: "Search saved successfully (Gemini)",
