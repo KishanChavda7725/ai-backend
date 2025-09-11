@@ -5,13 +5,11 @@ import { Search } from "../models/search.model";
 export const getAllChat = async (req: Request, res: Response) => {
   try {
     const chats = await Chat.find().sort({ createdAt: -1 });
-    res
-      .status(200)
-      .json({
-        status: "success",
-        message: "All chats fetched successfully",
-        data: chats,
-      });
+    res.status(200).json({
+      status: "success",
+      message: "All chats fetched successfully",
+      data: chats,
+    });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch chats" });
   }
@@ -32,5 +30,19 @@ export const getChatFromId = async (req: Request, res: Response) => {
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch searches" });
+  }
+};
+
+export const deleteChat = async (req: Request, res: Response) => {
+  try {
+    const chat = await Chat.findByIdAndDelete(req.params.id);
+    await Search.deleteMany({ chatId: req.params.id });
+    res.status(200).json({
+      status: "success",
+      message: "chat deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error });
   }
 };
