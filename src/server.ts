@@ -3,8 +3,8 @@ import { connectDB } from "./config/database";
 import express from "express";
 import cors from "cors";
 import { corsOptions } from "./config/corsOptions";
-import searchRoutes from "./routes/search.routes";
-import { checkAccessKey } from "./middleware/accessKey";
+import apiRoutes from "./routes/index";
+import { checkAccessKey } from "./middleware/access-key";
 import fs from "fs";
 import path from "path";
 const PORT = process.env.PORT || 5174;
@@ -20,7 +20,7 @@ if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true });
 }
 
-app.use("/api", checkAccessKey, searchRoutes);
+app.use("/api", apiRoutes);
 
 app.get("/", (_, res) => {
   res.send("API is running...");
